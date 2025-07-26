@@ -9,6 +9,7 @@
     "connectButton": "Connect to S3",
     "disconnectButton": "Disconnect"
   },
+
   "language": {
     "english": "English",
     "hindi": "Hindi"

@@ -5,7 +5,7 @@ const CORS_CONFIG = `[
     {
         "AllowedHeaders": ["*"],
         "AllowedMethods": ["GET", "PUT", "POST", "DELETE", "HEAD"],
-        "AllowedOrigins": ["https://demp.com"],
+        "AllowedOrigins": ["https://demo.com"],
         "ExposeHeaders": ["ETag"],
         "MaxAgeSeconds": 3000
     }
