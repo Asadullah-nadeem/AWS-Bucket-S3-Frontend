@@ -1,7 +1,6 @@
 import React, { useState, useRef } from "react";
 import Loader from "../components/UI/Loader";
 import Tooltip from "../components/Layout/Tooltip";
-import useLocalStorage from "../hooks/useLocalStorage";
 import { useTranslation } from 'react-i18next';
 
 const TOOLTIPS = {
@@ -11,6 +10,44 @@ const TOOLTIPS = {
     bucket: "The unique name of your S3 bucket.",
 };
 
+// AWS S3 Service Mock (Replace with real SDK in production)
+const AWSService = {
+    async connect({ accessKey, secretKey, region, bucket }) {
+        return new Promise((resolve, reject) => {
+            setTimeout(() => {
+                // Simulate different error scenarios
+                if (!accessKey || !secretKey || !region || !bucket) {
+                    return reject(new Error("All fields are required"));
+                }
+
+                if (!/^[a-z0-9.-]+$/.test(bucket)) {
+                    return reject(new Error("Invalid bucket name. Use lowercase letters, numbers, hyphens (-), and periods (.)"));
+                }
+
+                if (!/^[a-z]{2}-[a-z]+-\d$/.test(region)) {
+                    return reject(new Error("Invalid region format. Example: us-east-1"));
+                }
+
+                if (accessKey.length < 20 || !/^[A-Z0-9]{20,}$/.test(accessKey)) {
+                    return reject(new Error("Invalid Access Key format"));
+                }
+
+                if (secretKey.length < 40) {
+                    return reject(new Error("Invalid Secret Key format"));
+                }
+
+                // Simulate successful connection
+                resolve({
+                    bucket,
+                    region,
+                    success: true,
+                    message: `Connected to ${bucket} in ${region}`
+                });
+            }, 1500);
+        });
+    }
+};
+
 export default function HomePage({
                                      isConnected, setIsConnected,
                                      isLoading, setIsLoading,
@@ -18,52 +55,53 @@ export default function HomePage({
                                      s3Info, setS3Info,
                                      showToast
                                  }) {
-    const [accessKey, setAccessKey] = useLocalStorage("accessKey", "");
-    const [secretKey, setSecretKey] = useLocalStorage("secretKey", "");
-    const [region, setRegion] = useLocalStorage("region", "");
-    const [bucket, setBucket] = useLocalStorage("bucket", "");
+    const [accessKey, setAccessKey] = useState("");
+    const [secretKey, setSecretKey] = useState("");
+    const [region, setRegion] = useState("");
+    const [bucket, setBucket] = useState("");
     const [showTip, setShowTip] = useState("");
     const timeoutRef = useRef(null);
+    const { t } = useTranslation();
 
     const handleConnect = async e => {
         e.preventDefault();
         setIsLoading(true);
         setErrorMsg("");
 
-        // Clear any existing timeout
         if (timeoutRef.current) {
             clearTimeout(timeoutRef.current);
         }
 
-        // Simulate network call
-        timeoutRef.current = setTimeout(() => {
-            if (!accessKey || !secretKey || !region || !bucket) {
-                setErrorMsg("All fields are required.");
-                setIsLoading(false);
-                return;
-            }
+        try {
+            const result = await AWSService.connect({
+                accessKey,
+                secretKey,
+                region,
+                bucket
+            });
 
-            if (bucket.toLowerCase().includes("demo")) {
-                setIsConnected(true);
-                setS3Info({ bucket });
-                setIsLoading(false);
-                showToast("success", "Connected to S3 bucket successfully");
-            } else {
-                setIsConnected(false);
-                setIsLoading(false);
-                setErrorMsg("Invalid credentials or bucket name. Please check your information and try again.");
-                showToast("error", "Connection failed. Check credentials.");
-            }
-        }, 1500);
+            setIsConnected(true);
+            setS3Info({ bucket, region });
+            setIsLoading(false);
+            showToast("success", result.message);
+        } catch (error) {
+            setIsConnected(false);
+            setIsLoading(false);
+            setErrorMsg(error.message);
+            showToast("error", error.message);
+        }
     };
 
     const handleDisconnect = () => {
         setIsConnected(false);
-        setS3Info({ bucket: "" });
+        setS3Info({ bucket: "", region: "" });
+        setAccessKey("");
+        setSecretKey("");
+        setRegion("");
+        setBucket("");
         showToast("info", "Disconnected from S3 bucket.");
     };
 
-    // Cleanup timeout on unmount
     React.useEffect(() => {
         return () => {
             if (timeoutRef.current) {
@@ -71,13 +109,12 @@ export default function HomePage({
             }
         };
     }, []);
-    const { t } = useTranslation();
 
     return (
-        <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-md overflow-hidden">
+        <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-md overflow-hidden">
             <div className="p-6 md:p-8">
                 <header className="mb-8">
-                    <h1 className="text-2xl font-bold text-gray-800 mb-2">{t('home.title')}</h1>
+                    <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">{t('home.title')}</h1>
                     <p className="text-gray-600">
                         {t('home.description')}
                     </p>
@@ -94,7 +131,7 @@ export default function HomePage({
                         autoComplete="off"
                     >
                         {[
-                            { id: "accessKey", label: "Access Key ID", value: accessKey, setter: setAccessKey },
+                            { id: "accessKey", label: "Access Key ID", value: accessKey, setter: setAccessKey, type: "password" },
                             { id: "secretKey", label: "Secret Access Key", value: secretKey, setter: setSecretKey, type: "password" },
                             { id: "region", label: "Region", value: region, setter: setRegion, placeholder: "us-east-1" },
                             { id: "bucket", label: "Bucket Name", value: bucket, setter: setBucket }
@@ -111,10 +148,10 @@ export default function HomePage({
                                         onMouseLeave={() => setShowTip("")}
                                         aria-label="More information"
                                     >
-                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                        </svg>
-                                    </span>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </span>
                                 </label>
                                 <input
                                     id={field.id}
@@ -136,7 +173,7 @@ export default function HomePage({
                                 disabled={isConnected || isLoading}
                             >
                                 {isLoading && <Loader />}
-                                {isLoading ? "Connecting..." : "Connect to S3"}
+                                {isLoading ? "Connecting..." : t('home.connectButton')}
                             </button>
 
                             {isConnected && (
@@ -145,7 +182,7 @@ export default function HomePage({
                                     className="bg-gray-100 text-gray-700 px-4 py-3 rounded-lg hover:bg-gray-200 transition"
                                     onClick={handleDisconnect}
                                 >
-                                    Disconnect
+                                    {t('home.disconnectButton')}
                                 </button>
                             )}
                         </div>
@@ -169,8 +206,8 @@ export default function HomePage({
                                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                                 </svg>
                                 <span>
-                                    Connected to S3 Bucket: <span className="font-mono bg-blue-50 px-2 py-1 rounded">{s3Info.bucket}</span>
-                                </span>
+                  Connected to S3 Bucket: <span className="font-mono bg-blue-50 px-2 py-1 rounded">{s3Info.bucket}</span> in <span className="font-mono bg-blue-50 px-2 py-1 rounded">{s3Info.region}</span>
+                </span>
                             </div>
                         </div>
                     )}

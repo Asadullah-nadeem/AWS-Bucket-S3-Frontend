@@ -26,8 +26,8 @@ export default function App() {
         <div className="flex min-h-screen bg-gray-50">
             <Sidebar onNavigate={handleNavigate} active={page} />
 
-            <main className="flex-1 min-h-screen pl-64">
-                <div className="px-6 py-8 max-w-7xl mx-auto">
+            <main className="flex-1 min-h-screen pl-0 md:pl-64">
+                <div className="px-4 py-6 md:px-8 md:py-8 max-w-7xl mx-auto">
                     {toast && (
                         <Toast
                             type={toast.type}

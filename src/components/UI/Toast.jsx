@@ -12,8 +12,17 @@ export default function Toast({ type, message, onDismiss }) {
         return () => clearTimeout(timer);
     }, [onDismiss]);
 
-    const bgColor = type === 'success' ? 'bg-green-500' : 'bg-red-500';
-    const icon = type === 'success' ? '✅' : '❗';
+    const bgColor = type === 'success'
+        ? 'bg-green-500'
+        : type === 'error'
+            ? 'bg-red-500'
+            : 'bg-blue-500';
+
+    const icon = type === 'success'
+        ? '✅'
+        : type === 'error'
+            ? '❗'
+            : 'ℹ️';
 
     return (
         <div className={`fixed top-6 left-1/2 transform -translate-x-1/2 z-50 transition-opacity duration-300 ${

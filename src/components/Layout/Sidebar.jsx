@@ -29,7 +29,7 @@ export default function Sidebar({ onNavigate, active }) {
     }, []);
 
     return (
-        <nav className="w-64 bg-white shadow-md flex flex-col py-6 h-full fixed">
+        <nav className="w-full md:w-64 bg-white shadow-md flex flex-col py-6 h-full fixed z-10">
             <div className="h-12 mb-8 mx-auto flex items-center justify-center">
                 <span className="text-xl font-bold text-blue-600">S3 Bucket</span>
             </div>
