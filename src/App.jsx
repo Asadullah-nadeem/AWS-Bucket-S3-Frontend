@@ -3,6 +3,7 @@ import Sidebar from "./components/Layout/Sidebar";
 import Documentation from "./pages/Documentation";
 import Toast from "./components/UI/Toast";
 import HomePage from "./pages/HomePage";
+import './i18n';
 
 export default function App() {
     const [page, setPage] = useState("home");

@@ -1,18 +1,21 @@
 import React, { useState, useRef, useEffect } from "react";
+import { useTranslation } from 'react-i18next';
 import Tooltip from "./Tooltip";
 
-// Remove this line: import logo from "src/assets/react.svg";
-// Replace with a simple SVG logo or text
-
 const languages = [
-    { id: 1, flag: "🇺🇸", name: "English" },
-    { id: 2, flag: "🇮🇳", name: "Hindi" },
+    { code: 'en', flag: "🇺🇸", name: "language.english" },
+    { code: 'hi', flag: "🇮🇳", name: "language.hindi" }
 ];
 
 export default function Sidebar({ onNavigate, active }) {
-    const [lang, setLang] = useState("English");
+    const { t, i18n } = useTranslation();
     const [openLangMenu, setOpenLangMenu] = useState(false);
     const menuRef = useRef(null);
+
+    const changeLanguage = (lng) => {
+        i18n.changeLanguage(lng);
+        setOpenLangMenu(false);
+    };
 
     useEffect(() => {
         const handleClickOutside = (e) => {
@@ -27,7 +30,6 @@ export default function Sidebar({ onNavigate, active }) {
 
     return (
         <nav className="w-64 bg-white shadow-md flex flex-col py-6 h-full fixed">
-            {/* Replace logo with text or simple SVG */}
             <div className="h-12 mb-8 mx-auto flex items-center justify-center">
                 <span className="text-xl font-bold text-blue-600">S3 Bucket</span>
             </div>
@@ -43,7 +45,7 @@ export default function Sidebar({ onNavigate, active }) {
                             }`}
                             onClick={() => onNavigate(page)}
                         >
-                            <span className="capitalize">{page}</span>
+                            <span>{t(`sidebar.${page}`)}</span>
                         </button>
                     </li>
                 ))}
@@ -57,9 +59,9 @@ export default function Sidebar({ onNavigate, active }) {
                         aria-expanded={openLangMenu}
                         aria-haspopup="listbox"
                     >
-                        <span>
-                            {languages.find(l => l.name === lang)?.flag} {lang}
-                        </span>
+            <span>
+              {languages.find(l => l.code === i18n.language)?.flag} {t(languages.find(l => l.code === i18n.language)?.name)}
+            </span>
                         <svg
                             className={`h-4 w-4 transition-transform ${
                                 openLangMenu ? "rotate-180" : ""
@@ -79,20 +81,17 @@ export default function Sidebar({ onNavigate, active }) {
                             className="absolute z-10 bottom-full mb-2 w-full bg-white border border-gray-200 rounded-md shadow-lg py-1"
                             role="listbox"
                         >
-                            {languages.map(({ id, name, flag }) => (
+                            {languages.map(({ code, flag, name }) => (
                                 <li
-                                    key={id}
+                                    key={code}
                                     className={`cursor-pointer px-4 py-2 flex items-center gap-2 hover:bg-blue-50 ${
-                                        lang === name ? "font-medium text-blue-700" : ""
+                                        i18n.language === code ? "font-medium text-blue-700" : ""
                                     }`}
-                                    onClick={() => {
-                                        setLang(name);
-                                        setOpenLangMenu(false);
-                                    }}
+                                    onClick={() => changeLanguage(code)}
                                     role="option"
-                                    aria-selected={lang === name}
+                                    aria-selected={i18n.language === code}
                                 >
-                                    {flag} {name}
+                                    {flag} {t(name)}
                                 </li>
                             ))}
                         </ul>

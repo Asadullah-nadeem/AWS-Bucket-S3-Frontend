@@ -2,6 +2,7 @@ import React, { useState, useRef } from "react";
 import Loader from "../components/UI/Loader";
 import Tooltip from "../components/Layout/Tooltip";
 import useLocalStorage from "../hooks/useLocalStorage";
+import { useTranslation } from 'react-i18next';
 
 const TOOLTIPS = {
     accessKey: "Your AWS Access Key for programmatic access. Get from AWS IAM Console.",
@@ -70,14 +71,15 @@ export default function HomePage({
             }
         };
     }, []);
+    const { t } = useTranslation();
 
     return (
         <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-md overflow-hidden">
             <div className="p-6 md:p-8">
                 <header className="mb-8">
-                    <h1 className="text-2xl font-bold text-gray-800 mb-2">AWS S3 Storage Integration</h1>
+                    <h1 className="text-2xl font-bold text-gray-800 mb-2">{t('home.title')}</h1>
                     <p className="text-gray-600">
-                        Connect to your S3 bucket to manage files and storage
+                        {t('home.description')}
                     </p>
                 </header>
 
