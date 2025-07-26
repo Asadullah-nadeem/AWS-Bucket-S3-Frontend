@@ -1,9 +1,9 @@
 FROM node:20 AS builder
 WORKDIR /app
-
-RUN npm npm install -g yarn
+COPY package.json yarn.lock ./
 RUN yarn install
-RUN yarn run build
+COPY . .
+RUN yarn build
 
 FROM nginx:alpine
 COPY --from=builder /app/dist /usr/share/nginx/html
