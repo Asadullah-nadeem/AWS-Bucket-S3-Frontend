@@ -1,0 +1,16 @@
+{
+  "sidebar": {
+    "home": "Home",
+    "docs": "Docs"
+  },
+  "home": {
+    "title": "AWS S3 Storage Integration",
+    "description": "Connect to your S3 bucket to manage files and storage",
+    "connectButton": "Connect to S3",
+    "disconnectButton": "Disconnect"
+  },
+  "language": {
+    "english": "English",
+    "hindi": "Hindi"
+  }
+}
