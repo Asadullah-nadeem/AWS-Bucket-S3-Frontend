@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect } from "react";
-import logo from "src/assets/react.svg";
-import Tooltip from "./Tooltip.jsx";
+import Tooltip from "./Tooltip";
+
+// Remove this line: import logo from "src/assets/react.svg";
+// Replace with a simple SVG logo or text
 
 const languages = [
     { id: 1, flag: "🇺🇸", name: "English" },
@@ -12,7 +14,6 @@ export default function Sidebar({ onNavigate, active }) {
     const [openLangMenu, setOpenLangMenu] = useState(false);
     const menuRef = useRef(null);
 
-    // Close menu when clicking outside
     useEffect(() => {
         const handleClickOutside = (e) => {
             if (menuRef.current && !menuRef.current.contains(e.target)) {
@@ -26,11 +27,10 @@ export default function Sidebar({ onNavigate, active }) {
 
     return (
         <nav className="w-64 bg-white shadow-md flex flex-col py-6 h-full fixed">
-            <img
-                src={logo}
-                alt="Company Logo"
-                className="h-12 mb-8 mx-auto"
-            />
+            {/* Replace logo with text or simple SVG */}
+            <div className="h-12 mb-8 mx-auto flex items-center justify-center">
+                <span className="text-xl font-bold text-blue-600">S3 Bucket</span>
+            </div>
 
             <ul className="w-full mb-6 px-4">
                 {["home", "docs"].map((page) => (
