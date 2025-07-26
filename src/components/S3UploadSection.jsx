@@ -3,8 +3,7 @@ import React, { useState } from "react";
 export default function S3UploadSection({ bucket }) {
     const [fileName, setFileName] = useState("");
     const [dragActive, setDragActive] = useState(false);
-    // For folders/files--in production, fetch from S3
-    const [contents, setContents] = useState([
+    const [contents] = useState([
         { type: "folder", name: "photos" },
         { type: "file", name: "notes.txt" },
     ]);
@@ -15,7 +14,6 @@ export default function S3UploadSection({ bucket }) {
         }
     };
 
-    // Drag-drop handler
     const onDrag = e => {
         e.preventDefault();
         setDragActive(true);
