@@ -12,7 +12,9 @@ export default function useLocalStorage(key, initialValue = "") {
         setValue(val);
         try {
             window.localStorage.setItem(key, val);
-        } catch {}
+        } catch {
+            setValue(val);
+        }
     };
 
     return [value, setStoredValue];
