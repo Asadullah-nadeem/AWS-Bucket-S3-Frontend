@@ -3,8 +3,8 @@ import { useTranslation } from 'react-i18next';
 import Tooltip from "./Tooltip";
 
 const languages = [
-    { code: 'en', flag: "🇺🇸", name: "language.english" },
-    { code: 'hi', flag: "🇮🇳", name: "language.hindi" }
+    { code: 'en', flag: "🇺🇸", name: "english" },
+    { code: 'hi', flag: "🇮🇳", name: "hindi" }
 ];
 
 export default function Sidebar({ onNavigate, active }) {
