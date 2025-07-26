@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
-import logo from "../assets/react.svg";
-import Tooltip from "./Tooltip";
+import logo from "src/assets/react.svg";
+import Tooltip from "./Tooltip.jsx";
 
 const languages = [
     { id: 1, flag: "🇺🇸", name: "English" },

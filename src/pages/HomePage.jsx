@@ -1,6 +1,6 @@
-import React, { useState } from "react";
-import Tooltip from "../components/Tooltip";
-import Loader from "../components/Loader";
+import React, { useState, useRef } from "react";
+import Loader from "../components/UI/Loader";
+import Tooltip from "../components/Layout/Tooltip";
 import useLocalStorage from "../hooks/useLocalStorage";
 
 const TOOLTIPS = {
@@ -21,23 +21,28 @@ export default function HomePage({
     const [secretKey, setSecretKey] = useLocalStorage("secretKey", "");
     const [region, setRegion] = useLocalStorage("region", "");
     const [bucket, setBucket] = useLocalStorage("bucket", "");
-
     const [showTip, setShowTip] = useState("");
+    const timeoutRef = useRef(null);
 
     const handleConnect = async e => {
         e.preventDefault();
         setIsLoading(true);
         setErrorMsg("");
 
+        // Clear any existing timeout
+        if (timeoutRef.current) {
+            clearTimeout(timeoutRef.current);
+        }
+
         // Simulate network call
-        setTimeout(() => {
+        timeoutRef.current = setTimeout(() => {
             if (!accessKey || !secretKey || !region || !bucket) {
                 setErrorMsg("All fields are required.");
                 setIsLoading(false);
                 return;
             }
 
-            if (bucket === "demo-s3-bucket") {
+            if (bucket.toLowerCase().includes("demo")) {
                 setIsConnected(true);
                 setS3Info({ bucket });
                 setIsLoading(false);
@@ -45,116 +50,130 @@ export default function HomePage({
             } else {
                 setIsConnected(false);
                 setIsLoading(false);
-                setErrorMsg("❗ Error loading directory\nNetwork error: Please check your internet connection and ensure CORS is configured properly.");
-                showToast("error", "Error connecting to S3. Check credentials and CORS.");
+                setErrorMsg("Invalid credentials or bucket name. Please check your information and try again.");
+                showToast("error", "Connection failed. Check credentials.");
             }
-        }, 4400);
+        }, 1500);
     };
 
     const handleDisconnect = () => {
         setIsConnected(false);
         setS3Info({ bucket: "" });
-        showToast("error", "Disconnected from S3 bucket.");
+        showToast("info", "Disconnected from S3 bucket.");
     };
 
+    // Cleanup timeout on unmount
+    React.useEffect(() => {
+        return () => {
+            if (timeoutRef.current) {
+                clearTimeout(timeoutRef.current);
+            }
+        };
+    }, []);
+
     return (
-        <div className="max-w-3xl mx-auto bg-white rounded-lg shadow-md px-8 py-10">
-            <h1 className="text-2xl font-bold mb-2">AWS S3 Storage Integration Guide</h1>
-            <section className="mb-10">
-                <h2 className="text-lg font-semibold mb-4">AWS S3 Configuration</h2>
-                <form className="grid grid-cols-1 gap-4 sm:grid-cols-2" onSubmit={handleConnect} autoComplete="off">
-                    <div className="relative">
-                        <label className="block font-medium mb-1">Access Key ID
-                            <span className="ml-1 cursor-pointer text-gray-400"
-                                  onMouseEnter={() => setShowTip("accessKey")}
-                                  onMouseLeave={() => setShowTip("")}>ⓘ</span>
-                        </label>
-                        <input
-                            className="w-full border rounded px-3 py-2 focus:ring focus:ring-blue-200"
-                            type="text" value={accessKey} onChange={e => setAccessKey(e.target.value)}
-                            disabled={isLoading || isConnected}
-                        />
-                        {showTip === "accessKey" && <Tooltip text={TOOLTIPS.accessKey} />}
-                    </div>
+        <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-md overflow-hidden">
+            <div className="p-6 md:p-8">
+                <header className="mb-8">
+                    <h1 className="text-2xl font-bold text-gray-800 mb-2">AWS S3 Storage Integration</h1>
+                    <p className="text-gray-600">
+                        Connect to your S3 bucket to manage files and storage
+                    </p>
+                </header>
 
-                    <div className="relative">
-                        <label className="block font-medium mb-1">Secret Access Key
-                            <span className="ml-1 cursor-pointer text-gray-400"
-                                  onMouseEnter={() => setShowTip("secretKey")}
-                                  onMouseLeave={() => setShowTip("")}>ⓘ</span>
-                        </label>
-                        <input
-                            className="w-full border rounded px-3 py-2 focus:ring focus:ring-blue-200"
-                            type="password" value={secretKey} onChange={e => setSecretKey(e.target.value)}
-                            disabled={isLoading || isConnected}
-                        />
-                        {showTip === "secretKey" && <Tooltip text={TOOLTIPS.secretKey} />}
-                    </div>
+                <section className="mb-10">
+                    <h2 className="text-xl font-semibold mb-6 text-gray-700 border-b pb-2">
+                        AWS S3 Configuration
+                    </h2>
 
-                    <div className="relative">
-                        <label className="block font-medium mb-1">Region
-                            <span className="ml-1 cursor-pointer text-gray-400"
-                                  onMouseEnter={() => setShowTip("region")}
-                                  onMouseLeave={() => setShowTip("")}>ⓘ</span>
-                        </label>
-                        <input
-                            className="w-full border rounded px-3 py-2 focus:ring focus:ring-blue-200"
-                            type="text" value={region} onChange={e => setRegion(e.target.value)}
-                            disabled={isLoading || isConnected}
-                            placeholder="us-east-1"
-                        />
-                        {showTip === "region" && <Tooltip text={TOOLTIPS.region} />}
-                    </div>
+                    <form
+                        className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6"
+                        onSubmit={handleConnect}
+                        autoComplete="off"
+                    >
+                        {[
+                            { id: "accessKey", label: "Access Key ID", value: accessKey, setter: setAccessKey },
+                            { id: "secretKey", label: "Secret Access Key", value: secretKey, setter: setSecretKey, type: "password" },
+                            { id: "region", label: "Region", value: region, setter: setRegion, placeholder: "us-east-1" },
+                            { id: "bucket", label: "Bucket Name", value: bucket, setter: setBucket }
+                        ].map((field) => (
+                            <div key={field.id} className="relative">
+                                <label
+                                    htmlFor={field.id}
+                                    className="block font-medium mb-2 text-gray-700"
+                                >
+                                    {field.label}
+                                    <span
+                                        className="ml-1.5 cursor-pointer text-gray-400 inline-flex"
+                                        onMouseEnter={() => setShowTip(field.id)}
+                                        onMouseLeave={() => setShowTip("")}
+                                        aria-label="More information"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                    </span>
+                                </label>
+                                <input
+                                    id={field.id}
+                                    className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-300 focus:border-blue-500 transition"
+                                    type={field.type || "text"}
+                                    value={field.value}
+                                    onChange={e => field.setter(e.target.value)}
+                                    disabled={isLoading || isConnected}
+                                    placeholder={field.placeholder || ""}
+                                />
+                                {showTip === field.id && <Tooltip text={TOOLTIPS[field.id]} />}
+                            </div>
+                        ))}
 
-                    <div className="relative">
-                        <label className="block font-medium mb-1">Bucket Name
-                            <span className="ml-1 cursor-pointer text-gray-400"
-                                  onMouseEnter={() => setShowTip("bucket")}
-                                  onMouseLeave={() => setShowTip("")}>ⓘ</span>
-                        </label>
-                        <input
-                            className="w-full border rounded px-3 py-2 focus:ring focus:ring-blue-200"
-                            type="text" value={bucket} onChange={e => setBucket(e.target.value)}
-                            disabled={isLoading || isConnected}
-                        />
-                        {showTip === "bucket" && <Tooltip text={TOOLTIPS.bucket} />}
-                    </div>
-
-                    <div className="col-span-full flex items-center gap-3">
-                        <button
-                            type="submit"
-                            className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition-all disabled:opacity-50"
-                            disabled={isConnected || isLoading}
-                        >
-                            {isLoading ? <Loader /> : "Connect"}
-                        </button>
-
-                        {isConnected && (
+                        <div className="md:col-span-2 flex flex-wrap gap-3 pt-2">
                             <button
-                                type="button"
-                                className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 ml-2 transition-all"
-                                onClick={handleDisconnect}>
-                                Disconnect
+                                type="submit"
+                                className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition flex items-center gap-2 disabled:opacity-70"
+                                disabled={isConnected || isLoading}
+                            >
+                                {isLoading && <Loader />}
+                                {isLoading ? "Connecting..." : "Connect to S3"}
                             </button>
-                        )}
-                    </div>
-                </form>
 
-                {errorMsg && (
-                    <div className="mt-2 text-red-600 bg-red-50 border border-red-200 px-4 py-2 rounded whitespace-pre-line">
-                        {errorMsg}
-                    </div>
-                )}
-
-                {isConnected && (
-                    <div className="mt-6">
-                        <div className="flex items-center gap-2 text-green-700">
-                            <span className="text-2xl">✅</span>
-                            Connected to S3 Bucket: <span className="font-mono">{s3Info.bucket}</span>
+                            {isConnected && (
+                                <button
+                                    type="button"
+                                    className="bg-gray-100 text-gray-700 px-4 py-3 rounded-lg hover:bg-gray-200 transition"
+                                    onClick={handleDisconnect}
+                                >
+                                    Disconnect
+                                </button>
+                            )}
                         </div>
-                    </div>
-                )}
-            </section>
+                    </form>
+
+                    {errorMsg && (
+                        <div className="mt-6 bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">
+                            <div className="flex items-start">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 mt-0.5 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                                </svg>
+                                <span>{errorMsg}</span>
+                            </div>
+                        </div>
+                    )}
+
+                    {isConnected && (
+                        <div className="mt-6 bg-green-50 border border-green-200 rounded-lg p-4">
+                            <div className="flex items-center text-green-700">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                </svg>
+                                <span>
+                                    Connected to S3 Bucket: <span className="font-mono bg-blue-50 px-2 py-1 rounded">{s3Info.bucket}</span>
+                                </span>
+                            </div>
+                        </div>
+                    )}
+                </section>
+            </div>
         </div>
     );
 }
