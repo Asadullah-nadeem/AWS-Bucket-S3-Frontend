@@ -48,7 +48,7 @@ export default function HomePage({
                 setErrorMsg("❗ Error loading directory\nNetwork error: Please check your internet connection and ensure CORS is configured properly.");
                 showToast("error", "Error connecting to S3. Check credentials and CORS.");
             }
-        }, 1400);
+        }, 4400);
     };
 
     const handleDisconnect = () => {

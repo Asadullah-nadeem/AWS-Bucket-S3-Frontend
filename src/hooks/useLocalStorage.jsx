@@ -13,7 +13,6 @@ export default function useLocalStorage(key, initialValue = "") {
         try {
             window.localStorage.setItem(key, val);
         } catch {
-            setValue(val);
         }
     };
 
